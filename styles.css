@@ -96,6 +96,10 @@ main {
         width: var(--sprite-size);
     }
 
+    dt#plots-label {
+        --frame: 0;
+    }
+
     dt#item-label {
         --frame: 1;
     }

@@ -5,7 +5,7 @@ const gameElement = document.getElementById('game');
 // State
 const TICK = ["127.0.0.1", "localhost"].includes(location.hostname)  ? 5_000 : 60_000;
 const garden = JSON.parse(localStorage.getItem('garden') || JSON.stringify([{ s: null, t: "c", u: Date.now() }]));
-const inventory = JSON.parse(localStorage.getItem('inventory') || `{"c": 0, "s": 5}`);
+const inventory = JSON.parse(localStorage.getItem('inventory') || `{"c": 4, "s": 5}`);
 function save() {
     localStorage.setItem('garden', JSON.stringify(garden));
     localStorage.setItem('inventory', JSON.stringify(inventory));
@@ -16,31 +16,23 @@ let paused = false;
 const headerElement = document.createElement('header');
 gameElement.appendChild(headerElement);
 const inventoryElement = document.createElement('dl');
-const scoreDT = document.createElement('dt');
-scoreDT.id = 'item-label';
-scoreDT.ariaLabel = 'Items';
-const scoreDD = document.createElement('dd');
-scoreDD.id = 'item-definition';
-scoreDD.textContent = inventory.c;
-inventoryElement.appendChild(scoreDT);
-inventoryElement.appendChild(scoreDD);
-
-const seedDT = document.createElement('dt');
-seedDT.id = 'seed-label';
-seedDT.ariaLabel = 'Seeds';
-const seedDD = document.createElement('dd');
-seedDD.id = 'seed-definition';
-seedDD.textContent = inventory.s;
-inventoryElement.appendChild(seedDT);
-inventoryElement.appendChild(seedDD);
-
 inventoryElement.id = 'inventory';
+inventoryElement.innerHTML = `
+    <dt id="plots-label" aria-label="Plots"></dt>
+    <dd id="plots-definition">${garden.length}</dd>
+    <dt id="item-label" aria-label="Items"></dt>
+    <dd id="item-definition">${inventory.c}</dd>
+    <dt id="seed-label" aria-label="Seeds"></dt>
+    <dd id="seed-definition">${inventory.s}</dd>
+`;
+headerElement.appendChild(inventoryElement);
+
 function updateInventoryElement() {
-    scoreDD.textContent = inventory.c;
-    seedDD.textContent = inventory.s;
+    document.getElementById('plots-definition').textContent = garden.length;
+    document.getElementById('item-definition').textContent = inventory.c;
+    document.getElementById('seed-definition').textContent = inventory.s;
 }
 updateInventoryElement();
-headerElement.appendChild(inventoryElement);
 
 const gardenElement = document.createElement('div');
 gardenElement.id = 'garden';
@@ -55,8 +47,8 @@ gardenElement.addEventListener('click', (event) => {
             return;
         }
         inventory.c -= 5;
-        updateInventoryElement();
         garden.push({ s: null, t: "c", u: Date.now() });
+        updateInventoryElement();
         save();
         const plotElement = document.createElement('button');
         updatePlotElement(garden[garden.length - 1], garden.length - 1, plotElement);
@@ -167,7 +159,7 @@ function handlePlotAction(stage) {
             save();
             return null;
         case "READY":
-            inventory.c += 2;
+            inventory.c++;
             inventory.s++;
             updateInventoryElement();
             save();
