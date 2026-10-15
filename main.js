@@ -58,13 +58,13 @@ gardenElement.addEventListener('click', (event) => {
             return;
         }
         inventory.c -= 5;
+        updateInventoryElement();
         garden.push({ s: null, t: "c", u: Date.now() });
         save();
         const plotElement = document.createElement('button');
         updatePlotElement(garden[garden.length - 1], garden.length - 1, plotElement);
         // add to garden element as the second-to-last element (before the buy button)
         gardenElement.insertBefore(plotElement, buyPlotButton);
-        updateInventoryElement();
         return;
     }
     if (!target.classList.contains('plot')) {
@@ -166,20 +166,24 @@ function handlePlotAction(stage) {
         case "SPROUT":
         case "GROWTH":
             inventory.s++;
+            updateInventoryElement();
             save();
             return null;
         case "READY":
             inventory.c += 2;
             inventory.s++;
+            updateInventoryElement();
             save();
             return null;
         case "SEED":
             inventory.s += 3;
+            updateInventoryElement();
             save();
             return null;
         case null:
             if (inventory.s > 0) {
                 inventory.s--;
+                updateInventoryElement();
                 save();
                 return "SOWN";
             } else {
