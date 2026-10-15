@@ -14,9 +14,6 @@ let paused = false;
 
 // Create UI
 const headerElement = document.createElement('header');
-const titleElement = document.createElement('span');
-titleElement.textContent = 'Browser Garden';
-headerElement.appendChild(titleElement);
 gameElement.appendChild(headerElement);
 const inventoryElement = document.createElement('dl');
 const scoreDT = document.createElement('dt');
