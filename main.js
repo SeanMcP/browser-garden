@@ -1,78 +1,100 @@
 /** @ts-check */
-import { Plot } from './classes.js';
-import { getActiveTool } from './utils.js';
 
 const gameElement = document.getElementById('game');
 
+// State
+const TICK = ["127.0.0.1", "localhost"].includes(location.hostname)  ? 5_000 : 60_000;
+const garden = JSON.parse(localStorage.getItem('garden') || "[]");
+const inventory = JSON.parse(localStorage.getItem('inventory') || "{\"c\": 0, \"s\": 5}");
+function save() {
+    localStorage.setItem('garden', JSON.stringify(garden));
+    localStorage.setItem('inventory', JSON.stringify(inventory));
+}
+if (garden.length === 0) {
+    garden.push({ s: null, t: "c", u: Date.now() });
+    save();
+}
+let paused = false;
+
 // Create UI
+const inventoryElement = document.createElement('div');
+inventoryElement.id = 'inventory';
+function renderInventory() {
+    inventoryElement.textContent = `Inventory: C=${inventory.c}, S=${inventory.s}`;
+}
+renderInventory();
+gameElement.appendChild(inventoryElement);
 const gardenElement = document.createElement('div');
 gardenElement.id = 'garden';
 gameElement.appendChild(gardenElement);
-const toolbarElement = document.createElement('div');
-toolbarElement.id = 'toolbar';
-gameElement.appendChild(toolbarElement);
-
-["plant", "water", "fertilize", "harvest"].forEach((action, i) => {
-    const input = document.createElement('input');
-    input.type = "radio";
-    input.name = "tool";
-    input.value = action;
-    if (i === 0) {
-        input.checked = true;
-    }
-    const label = document.createElement('label');
-    label.textContent = action;
-    label.appendChild(input);
-    toolbarElement.appendChild(label);
-});
-
-// State
-const garden = new Map();
-garden.set("1,1", new Plot());
-let paused = false;
 
 // Events
 gardenElement.addEventListener('click', (event) => {
-
-    if (event.target.classList.contains('plot')) {
-        debugger;
-        const action = getActiveTool();
-        const key = event.target.dataset.key;
-        const plot = garden.get(key);
-        if (!plot) {
-            return;
-        }
-        switch (action) {
-            case "plant": {
-                plot.plant("carrot");
-                break;
-            }
-            case "water": {
-                plot.water();
-                break;
-            }
-            case "fertilize": {
-                plot.fertilize();
-                break;
-            }
-            default:
-                break;
-        }
+    const {target} = event;
+    if (!target.classList.contains('plot')) {
+        return;
     }
+    const index = target.dataset.key;
+    const plot = garden[index];
+    if (!plot) {
+        return;
+    }
+    console.debug(`Clicked on plot ${index}:`, plot);
+    garden[index] = {
+        ...plot,
+        s: handlePlotAction(plot.s),
+        u: Date.now()
+    };
+    save();
+    renderPlot(garden[index], index, target);
 });
 
 // Render
-function renderGarden() {
-    gardenElement.innerHTML = '';
-    for (const [key, plot] of garden.entries()) {
-        plot.age();
-        console.log(plot);
-        const plotElement = document.createElement('button');
-        plotElement.className = 'plot';
-        plotElement.textContent = `${key}: ${plot.type} (Growth: ${plot.growthLevel})`;
-        plotElement.dataset.key = key;
-        plot.addDataAttributes(plotElement);
-        gardenElement.appendChild(plotElement);
+function renderPlot(plot, i, el) {
+    el.classList.add('plot');
+    el.dataset.key = i;
+    el.textContent = `${i}(${plot.t}): ${plot.s} (${plot.u})`;
+}
+garden.forEach((plot, index) => {
+    const plotElement = document.createElement('button');
+    renderPlot(plot, index, plotElement);
+    gardenElement.appendChild(plotElement);
+});
+const buyPlotButton = document.createElement('button');
+buyPlotButton.textContent = 'Buy Plot (5 C)';
+buyPlotButton.addEventListener('click', () => {
+    if (inventory.c < 5) {
+        alert('Not enough currency to buy a plot.');
+        return;
+    }
+    inventory.c -= 5;
+    garden.push({ s: null, t: "c", u: Date.now() });
+    save();
+    const plotElement = document.createElement('button');
+    renderPlot(garden[garden.length - 1], garden.length - 1, plotElement);
+    // add to garden element as the second-to-last element (before the buy button)
+    gardenElement.insertBefore(plotElement, buyPlotButton);
+    renderInventory();
+});
+gardenElement.appendChild(buyPlotButton);
+
+function walkGarden() {
+    console.debug('Walking the garden...', garden);
+    const now = Date.now();
+    let changed = false;
+    gardenElement.querySelectorAll('.plot').forEach((plotElement) => {
+        const index = plotElement.dataset.key;
+        const plot = garden[index];
+        const derivedStage = deriveStage(plot);
+        if (derivedStage !== plot.s) {
+            console.debug(`Plot ${index} derived stage changed from ${plot.s} to ${derivedStage}`);
+            plot.s = derivedStage;
+            changed = true;
+        }
+        renderPlot(plot, index, plotElement);
+    });
+    if (changed) {
+        save();
     }
 }
 
@@ -80,8 +102,67 @@ function loop() {
     if (paused) {
         return;
     }
-    renderGarden();
+    renderInventory();
+    walkGarden();
 }
 
-renderGarden();
+walkGarden();
 setInterval(loop, 1000);
+
+// Utils
+function deriveStage(plot) {
+    const stages = ["SOWN", "SPROUT", "GROWTH", "READY", "SEED"];   
+    if (!plot.s) {
+        return null;
+    }
+    const elapsed = Date.now() - plot.u;
+    const ticksElapsed = Math.floor(elapsed / TICK);
+    const stageIndex = ticksElapsed % stages.length;
+    return stages[stageIndex];
+}
+
+function nextStage(stage) {
+    switch (stage) {
+        case "SOWN":
+            return "SPROUT";
+        case "SPROUT":
+            return "GROWTH";
+        case "GROWTH":
+            return "READY";
+        case "READY":
+            return "SEED";
+        case "SEED":
+            return "SOWN";
+        case null:
+            return stage;
+    }
+}
+
+function handlePlotAction(stage) {
+    switch (stage) {
+        case "SOWN":
+        case "SPROUT":
+        case "GROWTH":
+            inventory.s++;
+            save();
+            return null;
+        case "READY":
+            inventory.c += 2;
+            inventory.s++;
+            save();
+            return null;
+        case "SEED":
+            inventory.s += 3;
+            save();
+            return null;
+        case null:
+            if (inventory.s > 0) {
+                inventory.s--;
+                save();
+                return "SOWN";
+            } else {
+                alert("Not enough seeds to plant.");
+                return null;
+            }
+    }
+}
