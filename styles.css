@@ -7,19 +7,49 @@ button {
     font: inherit;
 }
 
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    font-weight: normal;
+    
+    &:not(:first-child) {
+        margin-inline-start: 1em;
+    }
+}
+
+main {
+    max-inline-size: 800px;
+    margin-inline: auto;
+}
+
+#game {
+    --sprite-size: 128px; /* size of each frame */
+    background-color: #44891a;
+    background-image: url('grass.png');
+    background-size: var(--sprite-size);
+    image-rendering: pixelated;
+
+    font-family: 'Micro 5', system-ui, sans-serif;
+    font-size: 2.25em;
+
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        padding-block-end: 0;
+    }
+}
+
 #inventory {
     /* ui.png; 3 frames, 32px square, laid out horizontally */
-    --sprite-size: 32px; /* size of each frame */
+    --sprite-size: 48px; /* size of each frame */
     --frame: 0;
 
     align-items: center;
-    background-color: #44891a;
     display: flex;
     gap: 0.5rem;
     justify-content: end;
     margin: 0;
-    padding: 1rem;
-    padding-block-end: 0;
 
     dt::before {
         content: "";
@@ -51,7 +81,6 @@ button {
 }
 
 #garden {
-    background-color: #44891a;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 1rem;
@@ -59,15 +88,14 @@ button {
     
     > * {
         aspect-ratio: 1 / 1; /* Maintain square shape */
-        border-radius: 2rem;
-        corner-shape: squircle;
+        border-radius: 0.5rem;
+        corner-shape: notch;
         padding: 1rem;
     }
 }
 
 .plot {
     /* carrot-stages.png: 5 frames, 32px square, laid out horizontally */
-    --sprite-size: 128px; /* 4x scale */
     --frame: 0;
     background-color: #493c2b;
     border: none;
@@ -96,9 +124,9 @@ button {
 
 #buy-plot {
     background-color: transparent;
-    border: 4px dashed currentColor;
+    border: 4px solid white;
     color: black;
     &:is(:focus, :hover) {
-        background-color: hsla(0, 0%, 0%, 0.1);
+        background-color: hsla(0, 0%, 100%, 0.1);
     }
 }

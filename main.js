@@ -13,6 +13,11 @@ function save() {
 let paused = false;
 
 // Create UI
+const headerElement = document.createElement('header');
+const titleElement = document.createElement('span');
+titleElement.textContent = 'Browser Garden';
+headerElement.appendChild(titleElement);
+gameElement.appendChild(headerElement);
 const inventoryElement = document.createElement('dl');
 const scoreDT = document.createElement('dt');
 scoreDT.id = 'item-label';
@@ -38,7 +43,7 @@ function updateInventoryElement() {
     seedDD.textContent = inventory.s;
 }
 updateInventoryElement();
-gameElement.appendChild(inventoryElement);
+headerElement.appendChild(inventoryElement);
 
 const gardenElement = document.createElement('div');
 gardenElement.id = 'garden';
@@ -93,7 +98,7 @@ garden.forEach((plot, index) => {
 });
 const buyPlotButton = document.createElement('button');
 buyPlotButton.id = 'buy-plot';
-buyPlotButton.textContent = 'Buy Plot (5 C)';
+buyPlotButton.innerHTML = 'Buy Plot<br/>(5 Carrots)';
 gardenElement.appendChild(buyPlotButton);
 
 function walkGarden() {
