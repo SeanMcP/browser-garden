@@ -4,26 +4,42 @@ const gameElement = document.getElementById('game');
 
 // State
 const TICK = ["127.0.0.1", "localhost"].includes(location.hostname)  ? 5_000 : 60_000;
-const garden = JSON.parse(localStorage.getItem('garden') || "[]");
-const inventory = JSON.parse(localStorage.getItem('inventory') || "{\"c\": 0, \"s\": 5}");
+const garden = JSON.parse(localStorage.getItem('garden') || JSON.stringify([{ s: null, t: "c", u: Date.now() }]));
+const inventory = JSON.parse(localStorage.getItem('inventory') || `{"c": 0, "s": 5}`);
 function save() {
     localStorage.setItem('garden', JSON.stringify(garden));
     localStorage.setItem('inventory', JSON.stringify(inventory));
 }
-if (garden.length === 0) {
-    garden.push({ s: null, t: "c", u: Date.now() });
-    save();
-}
 let paused = false;
 
 // Create UI
-const inventoryElement = document.createElement('div');
+const inventoryElement = document.createElement('dl');
+const scoreDT = document.createElement('dt');
+scoreDT.id = 'item-label';
+scoreDT.ariaLabel = 'Items';
+const scoreDD = document.createElement('dd');
+scoreDD.id = 'item-definition';
+scoreDD.textContent = inventory.c;
+inventoryElement.appendChild(scoreDT);
+inventoryElement.appendChild(scoreDD);
+
+const seedDT = document.createElement('dt');
+seedDT.id = 'seed-label';
+seedDT.ariaLabel = 'Seeds';
+const seedDD = document.createElement('dd');
+seedDD.id = 'seed-definition';
+seedDD.textContent = inventory.s;
+inventoryElement.appendChild(seedDT);
+inventoryElement.appendChild(seedDD);
+
 inventoryElement.id = 'inventory';
-function renderInventory() {
-    inventoryElement.textContent = `Inventory: C=${inventory.c}, S=${inventory.s}`;
+function updateInventoryElement() {
+    scoreDD.textContent = inventory.c;
+    seedDD.textContent = inventory.s;
 }
-renderInventory();
+updateInventoryElement();
 gameElement.appendChild(inventoryElement);
+
 const gardenElement = document.createElement('div');
 gardenElement.id = 'garden';
 gameElement.appendChild(gardenElement);
@@ -31,6 +47,21 @@ gameElement.appendChild(gardenElement);
 // Events
 gardenElement.addEventListener('click', (event) => {
     const {target} = event;
+    if (target.id === 'buy-plot') {
+        if (inventory.c < 5) {
+            alert('Not enough currency to buy a plot.');
+            return;
+        }
+        inventory.c -= 5;
+        garden.push({ s: null, t: "c", u: Date.now() });
+        save();
+        const plotElement = document.createElement('button');
+        updatePlotElement(garden[garden.length - 1], garden.length - 1, plotElement);
+        // add to garden element as the second-to-last element (before the buy button)
+        gardenElement.insertBefore(plotElement, buyPlotButton);
+        updateInventoryElement();
+        return;
+    }
     if (!target.classList.contains('plot')) {
         return;
     }
@@ -46,41 +77,27 @@ gardenElement.addEventListener('click', (event) => {
         u: Date.now()
     };
     save();
-    renderPlot(garden[index], index, target);
+    updatePlotElement(garden[index], index, target);
 });
 
 // Render
-function renderPlot(plot, i, el) {
+function updatePlotElement(plot, i, el) {
     el.classList.add('plot');
     el.dataset.key = i;
-    el.textContent = `${i}(${plot.t}): ${plot.s} (${plot.u})`;
+    el.dataset.stage = plot.s;
 }
 garden.forEach((plot, index) => {
     const plotElement = document.createElement('button');
-    renderPlot(plot, index, plotElement);
+    updatePlotElement(plot, index, plotElement);
     gardenElement.appendChild(plotElement);
 });
 const buyPlotButton = document.createElement('button');
+buyPlotButton.id = 'buy-plot';
 buyPlotButton.textContent = 'Buy Plot (5 C)';
-buyPlotButton.addEventListener('click', () => {
-    if (inventory.c < 5) {
-        alert('Not enough currency to buy a plot.');
-        return;
-    }
-    inventory.c -= 5;
-    garden.push({ s: null, t: "c", u: Date.now() });
-    save();
-    const plotElement = document.createElement('button');
-    renderPlot(garden[garden.length - 1], garden.length - 1, plotElement);
-    // add to garden element as the second-to-last element (before the buy button)
-    gardenElement.insertBefore(plotElement, buyPlotButton);
-    renderInventory();
-});
 gardenElement.appendChild(buyPlotButton);
 
 function walkGarden() {
     console.debug('Walking the garden...', garden);
-    const now = Date.now();
     let changed = false;
     gardenElement.querySelectorAll('.plot').forEach((plotElement) => {
         const index = plotElement.dataset.key;
@@ -91,7 +108,7 @@ function walkGarden() {
             plot.s = derivedStage;
             changed = true;
         }
-        renderPlot(plot, index, plotElement);
+        updatePlotElement(plot, index, plotElement);
     });
     if (changed) {
         save();
@@ -102,7 +119,7 @@ function loop() {
     if (paused) {
         return;
     }
-    renderInventory();
+    updateInventoryElement();
     walkGarden();
 }
 
