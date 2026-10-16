@@ -4,6 +4,7 @@ const gameElement = document.getElementById('game');
 
 // State
 const TICK = ["127.0.0.1", "localhost"].includes(location.hostname)  ? 5_000 : 60_000;
+const record = JSON.parse(localStorage.getItem('record') || `{"d": 0, "l": null}`);
 const garden = JSON.parse(localStorage.getItem('garden') || JSON.stringify([{ s: null, t: "c", u: Date.now() }]));
 const inventory = JSON.parse(localStorage.getItem('inventory') || `{"c": 4, "s": 5}`);
 function save() {
@@ -12,15 +13,29 @@ function save() {
 }
 let paused = false;
 
+function updateDays() {
+    const date = new Date();
+    const today = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    if (record.l !== today) {
+        console.debug('New day detected: updating record');
+        record.d++;
+        record.l = today;
+        localStorage.setItem('record', JSON.stringify(record));
+    }
+}
+updateDays();
+
 // Create UI
 const headerElement = document.createElement('header');
 gameElement.appendChild(headerElement);
 const inventoryElement = document.createElement('dl');
 inventoryElement.id = 'inventory';
 inventoryElement.innerHTML = `
-    <dt id="plots-label" aria-label="Plots"></dt>
+    <dt id="days-label" aria-label="Days played"></dt>
+    <dd id="days-definition">${record.d}</dd>
+    <dt id="plots-label" aria-label="Plots owned"></dt>
     <dd id="plots-definition">${garden.length}</dd>
-    <dt id="item-label" aria-label="Items"></dt>
+    <dt id="item-label" aria-label="Carrots"></dt>
     <dd id="item-definition">${inventory.c}</dd>
     <dt id="seed-label" aria-label="Seeds"></dt>
     <dd id="seed-definition">${inventory.s}</dd>
@@ -28,6 +43,7 @@ inventoryElement.innerHTML = `
 headerElement.appendChild(inventoryElement);
 
 function updateInventoryElement() {
+    document.getElementById('days-definition').textContent = record.d;
     document.getElementById('plots-definition').textContent = garden.length;
     document.getElementById('item-definition').textContent = inventory.c;
     document.getElementById('seed-definition').textContent = inventory.s;
@@ -113,6 +129,7 @@ function loop() {
     if (paused) {
         return;
     }
+    updateDays();
     updateInventoryElement();
     walkGarden();
 }

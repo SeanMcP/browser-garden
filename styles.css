@@ -73,16 +73,17 @@ main {
 }
 
 #inventory {
-    /* ui.png; 3 frames, 32px square, laid out horizontally */
+    /* ui.png; 4 frames, 32px square, laid out horizontally */
     --sprite-size: 48px; /* size of each frame */
     --frame: 0;
+    --frame-count: 4;
 
     align-items: center;
     background-color: hsla(0, 0%, 0%, 0.25);
     border-radius: 0.25rem;
     corner-shape: notch;
     display: flex;
-    gap: 0.5rem;
+    gap: 0.25rem;
     justify-content: end;
     margin: 0;
     padding-inline-end: 0.5rem;
@@ -92,7 +93,7 @@ main {
         background-image: url('ui.png');
         background-position-x: calc(var(--frame) * var(--sprite-size) * -1);
         background-repeat: no-repeat;
-        background-size: calc(var(--sprite-size) * 3) var(--sprite-size);
+        background-size: calc(var(--sprite-size) * var(--frame-count)) var(--sprite-size);
         display: block;
         height: var(--sprite-size);
         image-rendering: pixelated;
@@ -103,12 +104,14 @@ main {
     dt#plots-label {
         --frame: 0;
     }
-
     dt#item-label {
         --frame: 1;
     }
     dt#seed-label {
         --frame: 2;
+    }
+    dt#days-label {
+        --frame: 3;
     }
 
     dd {
