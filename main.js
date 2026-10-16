@@ -59,7 +59,7 @@ gardenElement.addEventListener('click', (event) => {
     const {target} = event;
     if (target.id === 'buy-plot') {
         if (inventory.c < 5) {
-            alert('Not enough currency to buy a plot.');
+            alert('You don\'t have enough carrots to buy a plot.');
             return;
         }
         inventory.c -= 5;
@@ -69,7 +69,22 @@ gardenElement.addEventListener('click', (event) => {
         const plotElement = document.createElement('button');
         updatePlotElement(garden[garden.length - 1], garden.length - 1, plotElement);
         // add to garden element as the second-to-last element (before the buy button)
-        gardenElement.insertBefore(plotElement, buyPlotButton);
+        gardenElement.insertBefore(plotElement, plotActionContainer);
+        return;
+    }
+    if (target.id === 'sell-plot') {
+        const plotElements = gardenElement.querySelectorAll('.plot');
+        if (plotElements.length <= 1) {
+            alert('You cannot sell the last plot.');
+            return;
+        }
+        const soldPlot = garden.pop();
+        // Every sold plot yields at least 1 seed and 5 carrots
+        inventory.s += soldPlot.s === "SEED" ? 3 : 1;
+        inventory.c += soldPlot.s === "READY" ? 6 : 5;
+        updateInventoryElement();
+        save();
+        gardenElement.removeChild(plotElements[plotElements.length - 1]);
         return;
     }
     if (!target.classList.contains('plot')) {
@@ -101,10 +116,13 @@ garden.forEach((plot, index) => {
     updatePlotElement(plot, index, plotElement);
     gardenElement.appendChild(plotElement);
 });
-const buyPlotButton = document.createElement('button');
-buyPlotButton.id = 'buy-plot';
-buyPlotButton.innerHTML = 'Buy Plot<br/>(5 Carrots)';
-gardenElement.appendChild(buyPlotButton);
+const plotActionContainer = document.createElement('div');
+plotActionContainer.id = 'plot-action-container';
+plotActionContainer.innerHTML = `
+    <button id="buy-plot">Buy -5¢</button>
+    <button id="sell-plot">Sell +5¢</button>
+`;
+gardenElement.appendChild(plotActionContainer);
 
 function walkGarden() {
     console.debug('Walking the garden...', garden);

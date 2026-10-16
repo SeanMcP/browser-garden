@@ -131,9 +131,6 @@ main {
     
     > * {
         aspect-ratio: 1 / 1; /* Maintain square shape */
-        border-radius: 0.5rem;
-        corner-shape: notch;
-        padding: 1rem;
     }
 }
 
@@ -142,7 +139,10 @@ main {
     --frame: 0;
     background-color: #493c2b;
     border: none;
+    border-radius: 0.5rem;
     color: white;
+    corner-shape: notch;
+    padding: 1rem;
 
     &::before {
         content: "";
@@ -165,12 +165,30 @@ main {
     &[data-stage="SEED"] { --frame: 4; }
 }
 
-#buy-plot {
-    background-color: transparent;
-    border: 4px solid white;
-    color: black;
-    &:is(:focus, :hover) {
-        background-color: hsla(0, 0%, 100%, 0.1);
+#plot-action-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    > button {
+        border: 4px solid currentColor;
+        border-radius: 0.5rem;
+        corner-shape: notch;
+        background-color: transparent;
+        color: hsla(0, 0%, 0%, 0.5);
+        flex: 1;
+
+        &:is(:focus, :hover) {
+            background-color: var(--action-button-color);
+            color: black;
+        }
+    }
+
+    #buy-plot {
+        --action-button-color: #31a2f2;
+    }
+    #sell-plot {
+        --action-button-color: #be2633;
     }
 }
 
@@ -205,7 +223,7 @@ main {
         gap: 0.5rem;
         padding: 0.5rem;
 
-        > * {
+        .plot {
             padding: 0.5rem;
         }
     }
