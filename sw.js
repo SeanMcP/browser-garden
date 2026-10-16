@@ -1,9 +1,12 @@
-const CACHE = 'browser-garden-v1';
+const CACHE = 'browser-garden-v2';
 const ASSETS = [
     './',
     './index.html',
     './styles.css',
     './main.js',
+    './game.js',
+    './storage.js',
+    './ui.js',
     './manifest.webmanifest',
     './fonts/micro-5-latin.woff2',
     './carrot.png',
